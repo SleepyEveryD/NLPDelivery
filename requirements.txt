@@ -1,0 +1,40 @@
+# Colab-oriented dependencies. Pin loosely; on Colab, torch/CUDA preinstalled they are.
+# Install with: pip install -r requirements.txt
+
+# --- Inference (Phase 0/1) ---
+transformers>=4.45.0
+accelerate>=0.34.0
+bitsandbytes>=0.43.0          # 4-bit nf4 quantization, this provides.
+sentencepiece                  # Some tokenizers, this needs.
+einops
+
+# --- Config / data / analysis ---
+pyyaml
+pandas>=2.0,<2.3               # Colab ships 2.2.2; bare 'pandas' grabbed 3.0.x and broke google-colab /
+                              # cudf / gradio / bqplot / db-dtypes (all need <3). Cap it, we must.
+matplotlib
+
+# --- RAG (Phase 4; install when needed) ---
+sentence-transformers>=3.0.0
+hnswlib>=0.8.0                 # The vector index the course uses (cosine), this is. Preferred over FAISS.
+faiss-cpu>=1.8.0              # Fallback vector store, this is.
+rank_bm25                     # Sparse BM25 for hybrid retrieval, optional it is.
+bm25s>=0.2.0                  # The scalable BM25 (scipy-sparse, disk save + mmap load) the LOCAL enwiki
+                              # index uses (retrieval.bm25_index). Query-time RAM stays small.
+wikiextractor                 # Cleans the raw enwiki XML dump -> plaintext JSON (the corpus build step).
+                              # Only needed OFFLINE when (re)building the local index, not at play time.
+
+# --- Utilities ---
+tqdm
+requests<2.33                 # Colab pins requests==2.32.4; bare 'requests' grabbed 2.34 and conflicted.
+
+# --- OPTIONAL: audio interface (backlog; install only if the audio interface arrives) ---
+# openai-whisper             # ASR (Session 11): whisper.load_model("base")
+# librosa                    # 16kHz audio loading
+
+# --- OPTIONAL: fine-tuning + LLM-as-judge eval (backlog; Session 12) ---
+# peft>=0.11.0               # LoRA / QLoRA adapters
+# trl                        # SFTTrainer
+# deepeval                   # GEval LLM-as-judge metric
+
+# NOTE: torch is preinstalled on Colab with the right CUDA build -- do not pin it here, you should not.

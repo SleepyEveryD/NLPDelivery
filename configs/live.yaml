@@ -1,0 +1,53 @@
+# Live-game ("real test") run configuration.
+# Same model/prompt as the baseline -- only the MODE and the game target differ.
+# Run it with: run_session(pipeline, config, game_client=<logged-in GameClient>).
+run_id: "live"
+seed: 13
+latency_budget_s: 30.0          # The hard wall of the game, this is.
+prompt_strategy: "few_shot_v1"  # Offline's best (0.869565), this strategy was -- so the real game with it, not zero-shot, we face.
+
+mode: "live"                    # The REAL test -- the game API drives the loop, correct comes post-submit.
+
+game:
+  competition_id: 0             # 0 Entertainment · 1 History · 2 Science · 3 Maths · 4 Philosophy · 5 News.
+  game_mode: "text"             # "text" | "speech".
+  aim_seconds: 25.0             # Submit by ~25s -- the network round-trip below the 30s wall, this leaves.
+
+model:
+  name: "Qwen/Qwen2.5-7B-Instruct"
+  quantization: "4bit"          # bitsandbytes nf4, on a Colab T4 it fits.
+  max_new_tokens: 256
+  temperature: 0.0              # Greedy -- deterministic and fast, we stay.
+  dtype: "bfloat16"
+
+retrieval:
+  enabled: true                 # Phase 4 RAG ON. The ablation (with vs without), flip this to compare.
+  source: "routed"              # Per-QUESTION routing: News -> live web (DuckDuckGo), else -> FAISS corpus
+                                # (or live Wikipedia when no index there is). All RAW content -- rule-compliant,
+                                # and in the video named: DuckDuckGo + Wikipedia + Simple-Wikipedia/FAISS.
+                                # Other choices: "wikipedia" | "web" | "faiss" (single-backend ablations).
+  top_k: 3
+  embedder: "intfloat/multilingual-e5-small"  # the FAISS path's encoder (e5; query/passage prefixes baked in).
+  index_path: "data/corpus/simplewiki"        # build it: python -m retrieval.build_index (null -> Wikipedia fallback).
+  bm25_index_path: null                        # LOCAL full-enwiki BM25 (docs/enwiki_bm25.md). When set, knowledge
+                                               # questions hit it FIRST (offline, no 429) and fall back to live
+                                               # Wikipedia only on a miss. null -> off, the old path stands. Build
+                                               # once: prepare_enwiki -> bm25_index, then point this at the dir.
+  min_score: 0.70               # FAISS cosine FLOOR: drop corpus docs below it (off-topic name-collisions, etc.).
+                                # CONSERVATIVE -- e5-small scores relevant passages ~0.80-0.88, clear noise <0.75,
+                                # so 0.70 trims only obvious garbage. Raise toward 0.78 if noise still lands; set
+                                # 0.0 to disable. Below the floor everything -> [] and routed falls back to Wikipedia.
+  news_fetch_bodies: 3          # NEWS only: also fetch the BODY of the top-N articles (0 = headlines only).
+                                # "who was quoted.." / exact numbers live in the TEXT, not the headline
+                                # (qid 10818: "four Canadians quarantining" was body-only -> model guessed 3).
+                                # >1, NOT 1: qid 10879 the TOP article said only "NSW government" (model guessed
+                                # Labor); the 2nd said "former NSW LIBERAL government" (= the answer). The
+                                # disambiguator often a LATER source carries -> 3 bodies we read. Each body is
+                                # ~2-4s (browser reused), so ~3 fetches + RSS + gen ~= 11-17s -- inside the 25s
+                                # aim, but the heaviest News turn. Dial to 2/1 if any News turn nears the 30s wall.
+  news_body_mode: "browser"     # off | ddg | browser. DDG-direct is blocked on the Colab IP, so on Colab use
+                                # "browser": a headless Chromium opens the Google-News link, runs the JS past the
+                                # consent wall + redirect, reads the rendered article. ~3-4s/article (browser reused
+                                # across the sweep), crash-safe -> headlines on any failure. Needs a setup cell:
+                                #   !pip -q install playwright && !playwright install chromium && !playwright install-deps
+                                # NAME "headless Chromium" in the video. Set "off" if a News turn nears the 30s wall.

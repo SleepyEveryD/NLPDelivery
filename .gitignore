@@ -1,0 +1,42 @@
+# ── Keep only what the deliverable notebooks need to run ──
+# Tracked on purpose: notebooks/, src/, configs/, data/*.jsonl,
+# NLP_assignment_api_client/, scripts/, requirements.txt, README.md
+
+# Claude / project working memory — internal notes, not part of the deliverable
+/memory/
+
+# Scratch downloads & working junk
+/temp/
+
+# Course-provided tutorial materials (~93M) — not our deliverable
+/tutorials/
+
+# Per-run experiment outputs (created at runtime by the notebooks)
+# Anchored to root so the src/experiments/ library package is NOT ignored.
+/experiments/
+
+# Authoring docs (video script, index how-to) — not needed to run anything
+/docs/
+
+# Generated retrieval corpus / BM25 index (rebuilt via scripts/build_enwiki_bm25.sh)
+/data/corpus/
+
+# The assignment brief itself
+/GroupAssignment2026.pdf
+
+# Claude Code local config
+.claude/
+
+# Python bytecode cache
+__pycache__/
+*.py[cod]
+*.egg-info/
+.ipynb_checkpoints/
+
+# macOS junk
+.DS_Store
+
+# Local env
+.venv/
+venv/
+.env

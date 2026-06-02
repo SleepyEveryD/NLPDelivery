@@ -1,0 +1,18 @@
+# Qwen2.5-7B-Instruct @ 4-bit -- the primary Colab model, this config describes.
+run_id: "qwen2.5-7b-4bit"
+seed: 13
+latency_budget_s: 30.0
+prompt_strategy: "zero_shot_v1"
+
+model:
+  name: "Qwen/Qwen2.5-7B-Instruct"
+  quantization: "4bit"
+  max_new_tokens: 256
+  temperature: 0.0
+  dtype: "bfloat16"
+
+retrieval:
+  enabled: false
+  top_k: 3
+  embedder: "intfloat/multilingual-e5-small"
+  index_path: null
