@@ -45,3 +45,4 @@ __pycache__/
 .venv/
 venv/
 .env
+/yang_dai
