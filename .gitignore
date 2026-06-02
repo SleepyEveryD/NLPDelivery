@@ -11,9 +11,14 @@
 # Course-provided tutorial materials (~93M) — not our deliverable
 /tutorials/
 
-# Per-run experiment outputs (created at runtime by the notebooks)
+# Per-run experiment outputs (created at runtime by the notebooks).
 # Anchored to root so the src/experiments/ library package is NOT ignored.
-/experiments/
+# EXCEPTION: 99_final_submission.ipynb displays experiments/adaptive_routing/fig_*.png
+# from the cloned repo, so those figures must stay tracked.
+/experiments/*
+!/experiments/adaptive_routing/
+/experiments/adaptive_routing/*
+!/experiments/adaptive_routing/fig_*.png
 
 # Authoring docs (video script, index how-to) — not needed to run anything
 /docs/

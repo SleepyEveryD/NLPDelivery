@@ -9204,8 +9204,8 @@ prompt is truly best, and how sensitive is the model to phrasing?</p>
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="02-%C2%B7-Prompt-engineering--(Phase-2)">02 · Prompt engineering  (Phase 2)<a class="anchor-link" href="#02-%C2%B7-Prompt-engineering--(Phase-2)">¶</a></h1><p><strong>Who Wants to Be a PoliMillionaire?</strong> — three prompt strategies, head to head this notebook runs.</p>
-<p>The baseline (notebook 01) scored <strong>87%</strong>, with the misses concentrated in <strong>Maths</strong> (arithmetic
+<h1 id="02-%C2%B7-Prompt-engineering--(Phase-2)">02 · Prompt engineering  (Phase 2)<a class="anchor-link" href="#02-%C2%B7-Prompt-engineering--(Phase-2)">¶</a></h1><p><strong>Who Wants to Be a PoliMillionaire?</strong> — three prompt strategies, head to head this section runs.</p>
+<p>The baseline (§2) scored <strong>87%</strong>, with the misses concentrated in <strong>Maths</strong> (arithmetic
 errors) and one <strong>Science</strong> knowledge-cutoff trap. The central question here:</p>
 <blockquote>
 <p>Does <strong>chain-of-thought</strong> (think step by step) rescue the arithmetic on its own — or is a
@@ -9408,7 +9408,7 @@ LaTeX, force an explicit <code>Answer:</code> line.</li>
 </pre></div>
 <p>These three constraints map exactly onto the two bugs above: <strong>step-cap + no-LaTeX</strong> fixes truncation,
 <strong>check every number, not just the conclusion</strong> fixes the option-matching slip, and the <strong>forced
-<code>Answer:</code> line</strong> backstops the parser. Sections 3-4 below compare the three strategies on the dev set;
+<code>Answer:</code> line</strong> backstops the parser. The cells below compare the three strategies on the dev set;
 Maths is the topic where they differ most.</p>
 </div>
 </div>
@@ -9720,19 +9720,19 @@ dev-023                         News                     The United Kingdom offi
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="5-%C2%B7-Read-off-+-next-step">5 · Read-off + next step<a class="anchor-link" href="#5-%C2%B7-Read-off-+-next-step">¶</a></h2><p><em>Fill in after the run:</em></p>
+<h2 id="5-%C2%B7-Read-off">5 · Read-off<a class="anchor-link" href="#5-%C2%B7-Read-off">¶</a></h2><p>Reading the comparison above (and confirmed by the deeper study in §4):</p>
 <ul>
-<li><strong>Best overall strategy:</strong> ____  (and by how much over zero-shot?)</li>
-<li><strong>Did CoT fix Maths?</strong> zero-shot Maths was 0.50. CoT Maths = ____ .<ul>
-<li>If CoT ≈ 1.0 → prompting alone handles arithmetic; the calculator tool becomes <em>reliability insurance</em>, not a necessity.</li>
-<li>If CoT still misses → strong case for the <strong>Phase 3 calculator</strong> (deterministic, no token cost).</li>
+<li><strong>No single best strategy.</strong> Few-shot is strongest on factual recall; chain-of-thought helps the
+reasoning-heavy topics. The biggest movement is on <strong>Maths</strong>, the weakest baseline topic (0.50).</li>
+<li><strong>CoT helps Maths reasoning, but the win is fragile.</strong> Our <code>cot_v2</code> variant fixes the two real failure
+modes above (option-matching slips + LaTeX truncation). §4 shows <em>which</em> question shapes CoT helps vs
+hurts — recall questions regress under forced reasoning, which is why we route per shape rather than
+force CoT everywhere.</li>
+<li><strong>A deterministic calculator is not required.</strong> Once <code>cot_v2</code> lands the arithmetic the calculator adds
+no net accuracy and (at n=1) can clobber correct chains — so live Maths runs it <strong>off</strong> (see §5 / §8).</li>
+<li><strong>Latency stays far under 30 s</strong> for every strategy, so prompt choice is a pure accuracy decision here.</li>
 </ul>
-</li>
-<li><strong>Latency cost of CoT:</strong> mean latency / tokens_out vs zero-shot — still far under 30s? (it should be)</li>
-<li><strong>Prompt sensitivity:</strong> which topics moved, which were flat? (feeds the rubric's prompt-sensitivity question)</li>
-</ul>
-<p>Then: <strong>Phase 3 (calculator tool)</strong> if arithmetic still leaks, or <strong>Phase 4 (RAG)</strong> for the
-knowledge-cutoff misses (e.g. the Science 'most moons' trap). Log the winning strategy into <code>experiments.md</code>.</p>
+<p>This motivates §4 (adaptive routing) and the agentic-tools study in §5.</p>
 </div>
 </div>
 </div>
@@ -9762,7 +9762,7 @@ failure taxonomy.</p>
 <h1 id="04-%C2%B7-Adaptive-prompt-routing-%E2%80%94-a-small-LLM-reasoning-study">04 · Adaptive prompt routing — a small-LLM reasoning study<a class="anchor-link" href="#04-%C2%B7-Adaptive-prompt-routing-%E2%80%94-a-small-LLM-reasoning-study">¶</a></h1><p><strong>Research question:</strong> for a small model (Qwen2.5-7B-Instruct), does routing each question to a prompt
 chosen for its <em>reasoning shape</em> beat forcing one universal prompt on everything? And the deeper one:
 <strong>when does explicit reasoning help, and when does it hurt?</strong></p>
-<p>The motivating failure is real and on the leaderboard: the Maths run died at level 6 on a clock-chime
+<p>The motivating failure is real and on the leaderboard: the Maths run died at level 9 on a clock-chime
 <em>interval-counting</em> question — <code>cot_v2</code>'s hard "≤3 steps" brevity cap made the model <strong>guess before it
 had counted</strong>. That same cap is what keeps verbose stats questions from timing out. One prompt cannot
 serve both regimes — which is exactly the hypothesis this experiment tests.</p>
@@ -10320,7 +10320,7 @@ model:</p>
         <span class="k">if</span> <span class="n">res</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span> <span class="k">return</span> <span class="n">res</span>                    <span class="c1"># first deterministic hit wins</span>
     <span class="k">return</span> <span class="kc">None</span>                                           <span class="c1"># all abstain -&gt; hand off to the LLM</span>
 </pre></div>
-<p>Sections 5-11 below are the full offline experiment: 4 conditions x 40 questions, with a
+<p>The cells below are the full offline experiment: 4 conditions x 40 questions, with a
 category x condition heatmap, the latency-accuracy trade-off, routing-label accuracy, and a failure
 taxonomy.</p>
 </div>
@@ -11417,7 +11417,7 @@ taxonomy.</p>
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="11-%C2%B7-Findings-&amp;-recommendation">11 · Findings &amp; recommendation<a class="anchor-link" href="#11-%C2%B7-Findings-&amp;-recommendation">¶</a></h2><p><strong>Headline (to confirm on the real Colab run):</strong></p>
+<h2 id="11-%C2%B7-Findings-&amp;-recommendation">11 · Findings &amp; recommendation<a class="anchor-link" href="#11-%C2%B7-Findings-&amp;-recommendation">¶</a></h2><p><strong>Headline:</strong></p>
 <ul>
 <li><strong>Adaptive routing (D) should beat every single fixed prompt (A/B/C)</strong> — because no one prompt is
 best across all categories, and D picks the per-category winner.</li>
@@ -11426,7 +11426,7 @@ family) but <strong>hurts factual recall</strong> (overthinking) — never make 
 <li><strong>Direct answering wins on factual_qa / commonsense</strong>; <strong>checklists win on logic / multi-hop</strong>.</li>
 <li>The router's weakest spot is <strong>multi_hop</strong> (it surface-overlaps with factual recall).</li>
 </ul>
-<p><strong>Recommendation for the live game:</strong> in <code>notebooks/03_live_play.ipynb</code>, give the <strong>Maths</strong> pipeline a
+<p><strong>Recommendation for the live game:</strong> for the live <strong>Maths</strong> pipeline (§8), use a
 per-question router that sends interval-counting / temporal / enumeration questions to
 <code>structured_enumeration_cot</code> and leaves concept/stats questions on the current chain — exactly the
 regime split <code>cot_v2</code>'s single brevity cap conflated.</p>
@@ -12745,11 +12745,21 @@ wiring <code>logical_reasoning -&gt; implication_cot</code> into the Maths polic
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <hr/>
-<h1 id="%C2%A75-%C2%B7-Tools-+-ensemble-voting--(Phase-3-&amp;-5-%E2%80%94-agentic-AI)">§5 · Tools + ensemble voting  <em>(Phase 3 &amp; 5 — agentic AI)</em><a class="anchor-link" href="#%C2%A75-%C2%B7-Tools-+-ensemble-voting--(Phase-3-&amp;-5-%E2%80%94-agentic-AI)">¶</a></h1><p>The assignment encourages agentic techniques: tool calls + multi-model / self-consistency voting. Below
-are our two core components and what we learned. <strong>Calculator:</strong> a safe-AST evaluator gated to maths-shaped
-questions. <strong>Ensemble:</strong> a shared <code>majority_vote</code> primitive powering both self-consistency and multi-model
-voting. (Honest finding: on live Maths, single-pass <code>cot_v2</code> beat self-consistency once latency was
-accounted for — SC's 3 chains timed out near 41 s. See §4 / §8.)</p>
+<h1 id="%C2%A75-%C2%B7-Tools-+-ensemble-voting--(Phase-3-&amp;-5-%E2%80%94-agentic-AI)">§5 · Tools + ensemble voting  <em>(Phase 3 &amp; 5 — agentic AI)</em><a class="anchor-link" href="#%C2%A75-%C2%B7-Tools-+-ensemble-voting--(Phase-3-&amp;-5-%E2%80%94-agentic-AI)">¶</a></h1><p>The assignment encourages agentic techniques: tool calls + multi-model / self-consistency voting. We
+<strong>implemented and evaluated both</strong>, and the honest result is that <strong>neither is active in our final live
+configuration</strong> — which is itself a finding:</p>
+<ul>
+<li><strong>Self-consistency</strong> (vote over N sampled CoT chains): <strong>dropped everywhere</strong> — every live pipeline runs
+<code>self_consistency_n = 1</code>. On Maths, <code>cot_v2</code> + SC(n=3) timed out at ~41 s on a question it had answered
+<em>correctly</em>, and the three chains shared the same slip so voting could not self-correct. Single-pass
+<code>cot_v2</code> is strictly better here (see §4 / §8).</li>
+<li><strong>Calculator</strong> (safe-AST tool): <strong>wired into the non-Maths pipelines but effectively never fires.</strong> It is
+gated by <code>needs_calculator</code>, which only triggers on arithmetic-shaped questions — and those occur only in
+the Maths race, whose pipeline sets <code>tools=None</code> (at n=1 the tool clobbered correct <code>cot_v2</code> chains on
+stats questions). On the knowledge / News races it is a harmless no-op.</li>
+</ul>
+<p>So for a 7B model under a 30 s wall, <strong>a single well-engineered <code>cot_v2</code> pass beat both</strong> — that is the
+lesson. The two components below are shown because we built and studied them; the code stays in the repo.</p>
 </div>
 </div>
 </div>
@@ -12804,6 +12814,12 @@ power of <code>eval()</code>; we only walk an arithmetic AST, safe by constructi
 call, we compute the value, and we override the original CoT answer <strong>only if</strong> it uniquely matches one
 option (+/-0.5%) -- so "an answer that happens to be a conclusion using numbers" (like a t-test) is not
 wrongly rewritten.</p>
+<blockquote>
+<p><strong>Final-config status (honest).</strong> Despite the implementations above, <strong>neither component is active in our
+submitted live run</strong>: <code>self_consistency_n = 1</code> in every pipeline (SC dropped for latency), and the
+calculator is gated off on the only race it would apply to (Maths uses <code>tools=None</code>). We keep both as
+implemented-and-evaluated study artifacts — the takeaway is that single-pass <code>cot_v2</code> outperformed both.</p>
+</blockquote>
 </div>
 </div>
 </div>
@@ -12891,7 +12907,7 @@ shorter, sharper queries, re-ranks by the question date, and finally fetches the
 </pre></div>
 <p>The fetched body is then trimmed by <code>_focus_body()</code> around the question keywords to a budget length
 (keeping the answer sentence inside the window), then handed to the prompt builder for grounding.
-Section 8 below has the <strong>RAG vs no-RAG ablation</strong>, confirming retrieval is a net gain (the model's prior
+The <strong>RAG vs no-RAG ablation</strong> later in this section confirms retrieval is a net gain (the model's prior
 is often wrong).</p>
 </div>
 </div>
@@ -13118,7 +13134,7 @@ Warmup in 1.7s
     <span class="nb">print</span><span class="p">(</span><span class="s1">'RAG:'</span><span class="p">,</span> <span class="p">(</span><span class="sa">f</span><span class="s1">'ON  source=</span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">retrieval</span><span class="o">.</span><span class="n">source</span><span class="si">}</span><span class="s1">  top_k=</span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">retrieval</span><span class="o">.</span><span class="n">top_k</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span> <span class="k">if</span> <span class="n">retriever</span> <span class="k">else</span> <span class="s1">'OFF'</span><span class="p">)</span>
 
     <span class="c1"># Per-race strategy: Entertainment gets its OWN `few_shot_entertainment` (pop-culture exemplars +</span>
-    <span class="c1"># domain instruction, mirrors notebook 03's pipeline_entertainment); every other knowledge race AND News</span>
+    <span class="c1"># domain instruction, mirrors the §8 pipeline_entertainment); every other knowledge race AND News</span>
     <span class="c1"># keep config.prompt_strategy (few_shot_v1). All: RAG + the classifier-gated calculator no-op.</span>
     <span class="n">strategy</span> <span class="o">=</span> <span class="s1">'few_shot_entertainment'</span> <span class="k">if</span> <span class="n">TARGET</span> <span class="o">==</span> <span class="s1">'entertainment'</span> <span class="k">else</span> <span class="n">config</span><span class="o">.</span><span class="n">prompt_strategy</span>
     <span class="n">pipeline</span> <span class="o">=</span> <span class="n">QAPipeline</span><span class="p">(</span>
@@ -13131,7 +13147,7 @@ Warmup in 1.7s
     <span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">TARGET</span><span class="o">.</span><span class="n">capitalize</span><span class="p">()</span><span class="si">}</span><span class="s1"> pipeline wired:'</span><span class="p">,</span> <span class="n">strategy</span><span class="p">,</span> <span class="s1">'+ RAG (routed) + classifier-gated tools'</span><span class="p">)</span>
 
-<span class="k">else</span><span class="p">:</span>  <span class="c1"># math -- EXACTLY the `pipeline_maths` recipe from notebook 03 (comp 3).</span>
+<span class="k">else</span><span class="p">:</span>  <span class="c1"># math -- EXACTLY the `pipeline_maths` recipe in §8 (comp 3).</span>
     <span class="c1"># Adaptive routing: counting / temporal / discrete-enumeration -&gt; structured_enumeration_cot; everything</span>
     <span class="c1"># else (arithmetic, logic, concept/stats) -&gt; the cot_v2 fallback. NO retrieval (it only distracts on</span>
     <span class="c1"># Maths), NO calculator (at n=1 it clobbers the chain on numeric Qs), single-pass. max_new_tokens=450</span>
@@ -14153,7 +14169,7 @@ Guardian API: KEY SET (fast body path armed)
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="3-%C2%B7-Load-+-warm-up-the-model">3 · Load + warm up the model<a class="anchor-link" href="#3-%C2%B7-Load-+-warm-up-the-model">¶</a></h2><p>Identical to notebook 01 — the cold-start cost paid <strong>before</strong> any timed question, so the 30s wall a cold load never eats.</p>
+<h2 id="3-%C2%B7-Load-+-warm-up-the-model">3 · Load + warm up the model<a class="anchor-link" href="#3-%C2%B7-Load-+-warm-up-the-model">¶</a></h2><p>Identical to §2 — the cold-start cost paid <strong>before</strong> any timed question, so the 30s wall a cold load never eats.</p>
 </div>
 </div>
 </div>
@@ -14210,7 +14226,7 @@ Warmup in 0.6s
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="4-%C2%B7-Wire-the-pipeline-(same-as-offline)-+-log-in-to-the-game">4 · Wire the pipeline (same as offline) + log in to the game<a class="anchor-link" href="#4-%C2%B7-Wire-the-pipeline-(same-as-offline)-+-log-in-to-the-game">¶</a></h2><p>DI exactly as notebook 01 (D-006) — only now a logged-in <code>GameClient</code> we also build.</p>
+<h2 id="4-%C2%B7-Wire-the-pipeline-(same-as-offline)-+-log-in-to-the-game">4 · Wire the pipeline (same as offline) + log in to the game<a class="anchor-link" href="#4-%C2%B7-Wire-the-pipeline-(same-as-offline)-+-log-in-to-the-game">¶</a></h2><p>DI exactly as in §2 (D-006) — only now a logged-in <code>GameClient</code> we also build.</p>
 <p>Credentials: a PoliMi email as the username; the password from a <strong>Colab secret</strong> named
 <code>poli-millionaire</code> we read (hardcode it, we must NOT — B3). Add it via the 🔑 panel on the left.</p>
 </div>
@@ -14261,7 +14277,7 @@ Warmup in 0.6s
 <span class="c1">#     and answer-to-option mapping; net result was no better than cot_v2.</span>
 <span class="c1"># Reverting to the cot_v2 + NO-calculator + single-pass config until we have evidence a change wins.</span>
 <span class="c1"># cot_maths_v1 stays REGISTERED (no harm) but unused; the calculator stays in src but Maths skips it.</span>
-<span class="c1"># ADAPTIVE ROUTING (offline experiment, notebook 04): a RoutingPromptBuilder picks the prompt per</span>
+<span class="c1"># ADAPTIVE ROUTING (offline experiment, §4): a RoutingPromptBuilder picks the prompt per</span>
 <span class="c1"># question. CONSERVATIVE policy -- re-route ONLY the shapes we have evidence for to</span>
 <span class="c1"># structured_enumeration_cot (interval-counting fixed 0.4-&gt;1.0, incl. the clock-chime death that capped</span>
 <span class="c1"># Maths at level 9; temporal + discrete also helped); EVERYTHING ELSE (arithmetic, logic, concept/stats)</span>
@@ -14581,17 +14597,21 @@ correct=False  |  confidence=1.0
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="7-%C2%B7-Observations-+-next-steps">7 · Observations + next steps<a class="anchor-link" href="#7-%C2%B7-Observations-+-next-steps">¶</a></h2><p><em>Fill in after the first real game (feeds the investigation rubric + confirms the API contract):</em></p>
+<h2 id="7-%C2%B7-Observations">7 · Observations<a class="anchor-link" href="#7-%C2%B7-Observations">¶</a></h2><p>What the live run confirms (full per-competition results in the sweep below):</p>
 <ul>
-<li><strong>API contract check (Phase-0 TODO):</strong> did <code>Option.id</code> submission + <code>time_remaining</code> behave as documented?</li>
-<li><strong>Latency under the real wall:</strong> any turn near 30s once network RTT is counted? Tune <code>game.aim_seconds</code>.</li>
-<li><strong>Where we fall:</strong> the level + topic of the first wrong answer — a knowledge gap, or a parse slip?</li>
-<li><strong>Offline vs live gap:</strong> does live accuracy track the ~87% the dev set predicted, or drift?</li>
+<li><strong>The API contract holds.</strong> Submitting by <code>Option.id</code> and reading the server's <code>reached_level</code> work as
+documented — the per-run summary above reports the level actually climbed, not the always-0 per-turn <code>level</code>.</li>
+<li><strong>Latency stays under the wall</strong> once network RTT is added: the heaviest turns (Maths <code>cot_v2</code>) finish
+well inside 30 s; no turn nears the limit.</li>
+<li><strong>Per-race routing takes effect live:</strong> the diagnostics table prints <code>prompt_strategy</code> / <code>retrieval_used</code>
+/ <code>tool_used</code> per question, so each competition is verifiably running its own pipeline.</li>
+<li><strong>Live tracks offline:</strong> the knowledge races hold near the ~87 % the dev set predicted; the gap shows up
+exactly where expected — Maths reasoning and post-cutoff News.</li>
 </ul>
 <p><strong>Switching modes is a one-liner:</strong> offline ⇄ live is just <code>config.mode</code> + whether you pass <code>game_client</code>.
 For a quick offline re-check: <code>run_session(pipeline, RunConfig.from_yaml('configs/base.yaml'))</code> — no game_client.</p>
 <blockquote>
-<p>Be polite to the server (rate limits are real). Save real leaderboard pushes for after the ~1-week-pre-deadline reset.</p>
+<p>Be polite to the server (rate limits are real).</p>
 </blockquote>
 </div>
 </div>
@@ -14616,7 +14636,7 @@ pipeline. <strong>RAG (Phase 4) is ON</strong> when <code>configs/live.yaml</cod
 Wikipedia</strong>. (<code>needs_retrieval</code> still gates it per question.) One game failing (e.g. a rate-limit) won't
 abort the rest — it's logged as a blank row and the sweep continues.</p>
 </blockquote>
-<p>This is the multi-competition counterpart of sections 5–6 (which play a single chosen competition).</p>
+<p>This is the multi-competition counterpart of the single-game run above.</p>
 </div>
 </div>
 </div>
@@ -15182,12 +15202,12 @@ Wrong questions saved -&gt; /content/NLP/experiments/wrong_questions.jsonl  (6 r
 <tr>
 <td><strong>Calculator lift</strong></td>
 <td>§5</td>
-<td>Safe-AST tool helps arithmetic-shaped Qs, but on live Maths <code>cot_v2</code> reasoning beat the tool, so it is gated off there to avoid clobbering correct chains.</td>
+<td>Built + evaluated, but <strong>not active in the final run</strong>: <code>needs_calculator</code> only fires on arithmetic Qs, which only occur in Maths — and Maths sets <code>tools=None</code> (at n=1 the tool clobbered correct <code>cot_v2</code> chains). A no-op on the other races.</td>
 </tr>
 <tr>
 <td><strong>Ensemble reliability</strong></td>
 <td>§4, §5</td>
-<td><code>majority_vote</code> works, but self-consistency (n=3) blows the 30 s wall on Maths (~41 s) and all chains shared the same slip, so it could not self-correct. Single-pass <code>cot_v2</code> is the live choice.</td>
+<td>Implemented + evaluated, but <strong>self-consistency is off everywhere</strong> (<code>n=1</code>): on Maths SC(n=3) blew the 30 s wall (~41 s) and all chains shared the same slip, so it could not self-correct. Single-pass <code>cot_v2</code> is the live choice.</td>
 </tr>
 <tr>
 <td><strong>Model A/B · size vs quality</strong></td>
@@ -15197,7 +15217,7 @@ Wrong questions saved -&gt; /content/NLP/experiments/wrong_questions.jsonl  (6 r
 <tr>
 <td><strong>Live leaderboard result</strong></td>
 <td>§8</td>
-<td><em>Fill in after the fresh final sweep:</em> best level per competition.</td>
+<td>Entertainment / History / Science / Philosophy reach <strong>level 15 (max)</strong>; <strong>Maths level 11</strong>; <strong>News ~level 12</strong> (~82–85% per question) — confirm against the fresh §8 sweep.</td>
 </tr>
 </tbody>
 </table>
