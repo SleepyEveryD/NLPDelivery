@@ -7694,8 +7694,8 @@ millionaire_client, imported it is.
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-python"><pre><span></span><span class="c1"># The inference stack + the client's `requests`, install we do (light it stays). `-U` kept (Colab a stale</span>
-<span class="c1"># bitsandbytes preinstalls); pandas/requests PINNED to Colab's versions (bare `-U` breaks google-colab/cudf).</span>
-<span class="err">!</span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">q</span> <span class="o">-</span><span class="n">U</span> <span class="s1">'transformers&gt;=4.45.0'</span> <span class="s1">'accelerate&gt;=0.34.0'</span> <span class="s1">'bitsandbytes&gt;=0.46.1'</span> <span class="n">sentencepiece</span> <span class="n">einops</span> <span class="n">pyyaml</span> <span class="s1">'pandas==2.2.2'</span> <span class="n">matplotlib</span> <span class="s1">'requests==2.32.4'</span>
+<span class="c1"># bitsandbytes preinstalls); pandas/requests PINNED to Colab's versions; matplotlib NOT upgraded (bare `-U` breaks google-colab/cudf, and upgrading matplotlib mid-session breaks the already-imported backend_bases). Colab ships matplotlib; requirements.txt covers local.</span>
+<span class="err">!</span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">q</span> <span class="o">-</span><span class="n">U</span> <span class="s1">'transformers&gt;=4.45.0'</span> <span class="s1">'accelerate&gt;=0.34.0'</span> <span class="s1">'bitsandbytes&gt;=0.46.1'</span> <span class="n">sentencepiece</span> <span class="n">einops</span> <span class="n">pyyaml</span> <span class="s1">'pandas==2.2.2'</span> <span class="s1">'requests==2.32.4'</span>
 <span class="nb">print</span><span class="p">(</span><span class="s1">'Installed, the dependencies are.'</span><span class="p">)</span>
 </pre></div>
 </div>
