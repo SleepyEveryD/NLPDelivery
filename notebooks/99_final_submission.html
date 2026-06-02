@@ -7730,14 +7730,25 @@ millionaire_client, imported it is.
 <span class="err">!</span><span class="n">playwright</span> <span class="n">install</span> <span class="n">chromium</span>
 <span class="err">!</span><span class="n">playwright</span> <span class="n">install</span><span class="o">-</span><span class="n">deps</span>
 
-<span class="c1"># ARMED? a REAL launch the surest test is. NOT ready -&gt; News falls back to HEADLINES only (crash-safe).</span>
-<span class="k">try</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">playwright.sync_api</span> <span class="kn">import</span> <span class="n">sync_playwright</span>
-    <span class="k">with</span> <span class="n">sync_playwright</span><span class="p">()</span> <span class="k">as</span> <span class="n">_p</span><span class="p">:</span>
-        <span class="n">_b</span> <span class="o">=</span> <span class="n">_p</span><span class="o">.</span><span class="n">chromium</span><span class="o">.</span><span class="n">launch</span><span class="p">(</span><span class="n">headless</span><span class="o">=</span><span class="kc">True</span><span class="p">);</span> <span class="n">_b</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+<span class="c1"># ARMED? Probe inside a WORKER THREAD (its own event loop) -- EXACTLY how the real fetcher runs</span>
+<span class="c1"># (src/retrieval/browser_fetch.py). A bare sync_playwright() in the cell would hit Jupyter/Colab's</span>
+<span class="c1"># asyncio loop and FALSELY report "not ready" ("Sync API inside asyncio loop"), even though live-News</span>
+<span class="c1"># body fetch works fine. NOT ready -&gt; News falls back to HEADLINES only (crash-safe).</span>
+<span class="kn">import</span> <span class="nn">threading</span>
+<span class="n">_probe</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="k">def</span> <span class="nf">_probe_browser</span><span class="p">():</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">playwright.sync_api</span> <span class="kn">import</span> <span class="n">sync_playwright</span>
+        <span class="k">with</span> <span class="n">sync_playwright</span><span class="p">()</span> <span class="k">as</span> <span class="n">_p</span><span class="p">:</span>
+            <span class="n">_b</span> <span class="o">=</span> <span class="n">_p</span><span class="o">.</span><span class="n">chromium</span><span class="o">.</span><span class="n">launch</span><span class="p">(</span><span class="n">headless</span><span class="o">=</span><span class="kc">True</span><span class="p">);</span> <span class="n">_b</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="n">_probe</span><span class="p">[</span><span class="s1">'ok'</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">_e</span><span class="p">:</span>
+        <span class="n">_probe</span><span class="p">[</span><span class="s1">'err'</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">_e</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s1">: </span><span class="si">{</span><span class="n">_e</span><span class="si">}</span><span class="s1">'</span>
+<span class="n">_t</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">_probe_browser</span><span class="p">);</span> <span class="n">_t</span><span class="o">.</span><span class="n">start</span><span class="p">();</span> <span class="n">_t</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="mi">120</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">_probe</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'ok'</span><span class="p">):</span>
     <span class="nb">print</span><span class="p">(</span><span class="s1">'headless Chromium: READY -- live-News body fetch armed.'</span><span class="p">)</span>
-<span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">_e</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'headless Chromium NOT ready (</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">_e</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s1">: </span><span class="si">{</span><span class="n">_e</span><span class="si">}</span><span class="s1">)'</span><span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"headless Chromium NOT ready (</span><span class="si">{</span><span class="n">_probe</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'err'</span><span class="p">,</span> <span class="s1">'launch timed out'</span><span class="p">)</span><span class="si">}</span><span class="s2">)"</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="s1">'   -&gt; News will use HEADLINES only. Re-run this cell, or set retrieval.news_body_mode: "off".'</span><span class="p">)</span>
 </pre></div>
 </div>
