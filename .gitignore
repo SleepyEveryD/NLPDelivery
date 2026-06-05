@@ -21,7 +21,7 @@
 !/experiments/adaptive_routing/fig_*.png
 
 # Authoring docs (video script, index how-to) — not needed to run anything
-/docs/
+
 
 # Generated retrieval corpus / BM25 index (rebuilt via scripts/build_enwiki_bm25.sh)
 /data/corpus/
